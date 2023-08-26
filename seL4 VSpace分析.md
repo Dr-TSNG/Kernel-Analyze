@@ -128,7 +128,3 @@ poolPtr->array[asid & MASK(asidLowBits)] = regionBase;
 根据 ASID 和虚拟地址，删除一个从 `vptr` 到 `pptr` 的物理页映射。
 
 与 `unmapPageTable` 类似，不过是删除叶子页表项。
-
-## 待续
-
-继续分析相关系统调用和 root server 对地址空间和 ASID 的操作。

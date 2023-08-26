@@ -54,7 +54,10 @@ map_kernel_window：该阶段第一步工作是将从 `PADDR_BASE` 开始，到 
 
 接下来的一步是映射 Kernel ELF。此处设置了两个虚拟地址指向同一个内核二级页表，一个是从 `KERNEL_ELF_PADDR_BASE + PPTR_BASE_OFFSET` 开始，一个是从 `KERNEL_ELF_BASE` 开始，占据 1GB。然后，分别完成二级页表到 Kernel ELF 对应物理内存的映射。
 
-*为什么这里要映射两遍，不太明白。*
+注意到 Kernel ELF 映射了两遍：
+
++ 位于上面的部分：内核执行时的虚拟地址，由 OpenSBI 完成初始映射。
++ 位于下面的部分：包括 Kernel ELF 在内的从 0 开始的整片物理内存。
 
 ![Kernel ELF 映射](https://nullptr.icu/usr/uploads/2023/08/499604017.png)
 
@@ -80,9 +83,7 @@ while (pptr < PPTR_TOP + RISCV_GET_LVL_PGSIZE(0)) {
 ...
 ```
 
-最后，映射内核设备。
-
-*大概是 MMIO 一类的东西？*
+最后，映射内核设备（MMIO 一类的东西）。
 
 ```c
 /* Map kernel device page table */
@@ -181,7 +182,7 @@ create_root_cnode(void)
 
 ### 创建初始线程地址空间
 
-`create_it_address_space`：rootserver 能够访问整个内核的地址，所以将内核的一级页表复制给 rootserver，然后为其分配这个 cap：
+`create_it_address_space`：将内核区域映射表复制给 rootserver，然后为其分配这个 cap：
 
 ```c
 cap_t      lvl1pt_cap;
@@ -342,7 +343,7 @@ BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vp
 
 接下来，拷贝一份 `ipcbuf cap`，并在 root task 的 CTE 中插入 `cnode cap`、`vtable cap`、`ipcbuf cap`，并设置指向 boot info 的寄存器和 `pc`。
 
-*这里我没明白为什么 `ipcbuf cap`  要 derive 一遍。*
+*这里我没明白为什么 `ipcbuf cap` 要 derive 一遍。*
 
 ```c
 /* derive a copy of the IPC buffer cap for inserting */
